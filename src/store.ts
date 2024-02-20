@@ -2,8 +2,8 @@ import { create } from "zustand";
 import { Row, Cell } from "../types";
 import { produce } from "immer";
 
-const INITIAL_ROWS = 50;
-const INITIAL_COLUMNS = 20;
+const INITIAL_ROWS = 20;
+const INITIAL_COLUMNS = 26;
 
 type GridStore = {
   rowHeaders: Cell[];
@@ -17,15 +17,18 @@ type GridStore = {
   focusedCell: { row: number | undefined; column: number | undefined };
   setFocusedCell: (row: number | undefined, column: number | undefined) => void;
   currentlyHighlighting: boolean;
-  setCurrentHighlighting: (value: boolean) => void;
-  highlightedRange: {
-    start: { row: number | undefined; column: number | undefined };
-    end: { row: number | undefined; column: number | undefined };
-  };
-  setHighlightedRange: (
-    start: { row: number | undefined; column: number | undefined },
-    end: { row: number | undefined; column: number | undefined },
-  ) => void;
+  setCurrentlyHighlighting: (value: boolean) => void;
+  highlightedStart: { row: number | undefined; column: number | undefined };
+  highlightedEnd: { row: number | undefined; column: number | undefined };
+  setHighlightedStart: (start: {
+    row: number | undefined;
+    column: number | undefined;
+  }) => void;
+  setHighlightedEnd: (end: {
+    row: number | undefined;
+    column: number | undefined;
+  }) => void;
+  clearHighlightedRange: () => void;
 };
 
 export const useGridStore = create<GridStore>((set) => ({
@@ -53,33 +56,57 @@ export const useGridStore = create<GridStore>((set) => ({
       set({ focusedCell: { row, column } });
       return;
     }
+
     set({ focusedCell: { row, column } });
   },
 
   // Highlighting, dragging functionality
   currentlyHighlighting: false,
-  setCurrentHighlighting: (value) => {
+  setCurrentlyHighlighting: (value) => {
     set({ currentlyHighlighting: value });
   },
-  highlightedRange: {
-    start: { row: 0, column: 0 },
-    end: { row: 0, column: 0 },
-  },
-  setHighlightedRange: (start, end) => {
-    if (start === undefined || end === undefined) {
-      set({
-        highlightedRange: {
-          start: { row: undefined, column: undefined },
-          end: { row: undefined, column: undefined },
-        },
-      });
+
+  highlightedStart: { row: 0, column: 0 },
+  setHighlightedStart: (start) => {
+    if (start === undefined) {
+      set({ highlightedStart: { row: undefined, column: undefined } });
+      return;
     }
-    set({
-      highlightedRange: {
-        start,
-        end,
-      },
-    });
+    set({ highlightedStart: start });
+  },
+  highlightedEnd: { row: 0, column: 0 },
+  setHighlightedEnd: (end) => {
+    if (end === undefined) {
+      set({ highlightedEnd: { row: undefined, column: undefined } });
+      return;
+    }
+    set({ highlightedEnd: end });
+  },
+  clearHighlightedRange: () => {
+    set(
+      produce((state) => {
+        if (
+          state.highlightedStart.row !== undefined &&
+          state.highlightedStart.column !== undefined &&
+          state.highlightedEnd.row !== undefined &&
+          state.highlightedEnd.column !== undefined
+        ) {
+          for (
+            let i = state.highlightedStart.row;
+            i <= state.highlightedEnd.row;
+            i++
+          ) {
+            for (
+              let j = state.highlightedStart.column;
+              j <= state.highlightedEnd.column;
+              j++
+            ) {
+              state.grid[i].cells[j].value = "";
+            }
+          }
+        }
+      }),
+    );
   },
 }));
 

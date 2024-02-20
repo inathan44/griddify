@@ -4,7 +4,6 @@ import Header from "./Header";
 const RowHeader = () => {
   const rowHeaders = useGridStore((state) => state.rowHeaders);
 
-  console.log("rowHeaders", rowHeaders);
   return (
     <div>
       {rowHeaders.map((_row, i) => {

@@ -1,37 +1,36 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { Cell } from "../../types";
 import { useGridStore } from "../store";
-import { isCellHighlighted } from "@/lib/helperFunctions";
 import { cn } from "@/lib/utils";
 
 type cellProps = {
   cell: Cell;
+  isFocused: boolean;
 };
 
-const Cell = ({ cell }: cellProps) => {
+const Cell = memo(({ cell, isFocused }: cellProps) => {
+  console.log(`Cell: ${cell.row}, ${cell.column} is being rendered`);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const editCellValue = useGridStore((state) => state.editCellValue);
   const setFocusedCell = useGridStore((state) => state.setFocusedCell);
-  const highlightedRange = useGridStore((state) => state.highlightedRange);
-  const focusedCell = useGridStore((state) => state.focusedCell);
-  const currentlyHighlighting = useGridStore(
-    (state) => state.currentlyHighlighting,
+  const setHighlightedStart = useGridStore(
+    (state) => state.setHighlightedStart,
   );
-
-  const setCurrentHighlighting = useGridStore(
-    (state) => state.setCurrentHighlighting,
+  const setHighlightedEnd = useGridStore((state) => state.setHighlightedEnd);
+  const setCurrentlyHighlighting = useGridStore(
+    (state) => state.setCurrentlyHighlighting,
   );
-
-  const setHighlightedRange = useGridStore(
-    (state) => state.setHighlightedRange,
+  const clearHighlightedRange = useGridStore(
+    (state) => state.clearHighlightedRange,
   );
 
   useEffect(() => {
-    if (focusedCell.row === cell.row && focusedCell.column === cell.column) {
+    if (isFocused) {
       inputRef.current?.focus();
     }
-  }, [focusedCell.row, focusedCell.column, cell.row, cell.column]);
+  }, [isFocused]);
 
   function handleKeyDown(
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -39,113 +38,74 @@ const Cell = ({ cell }: cellProps) => {
     column: number,
   ) {
     // Handle navigation keys
+    if (e.key === "Tab") {
+      e.preventDefault();
+    }
     if (
       ["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "Tab"].includes(e.key)
     ) {
-      setHighlightedRange(
-        { row: undefined, column: undefined },
-        { row: undefined, column: undefined },
-      );
+      setHighlightedStart({ row: undefined, column: undefined });
+      setHighlightedEnd({ row: undefined, column: undefined });
     }
     if (e.key === "Enter" || e.key === "ArrowDown") {
       setFocusedCell(row + 1, column);
     } else if (e.key === "ArrowUp") {
       setFocusedCell(row - 1, column);
-    } else if (e.key === "ArrowRight") {
+    } else if (e.key === "ArrowRight" || e.key === "Tab") {
       setFocusedCell(row, column + 1);
     } else if (e.key === "ArrowLeft") {
       setFocusedCell(row, column - 1);
     }
 
-    // handle escape key
+    // handle delete key
     if (e.key === "Delete") {
-      if (
-        highlightedRange.start.row !== undefined &&
-        highlightedRange.start.column !== undefined &&
-        highlightedRange.end.row !== undefined &&
-        highlightedRange.end.column !== undefined
-      ) {
-        for (
-          let i = highlightedRange.start.row;
-          i <= highlightedRange.end.row;
-          i++
-        ) {
-          for (
-            let j = highlightedRange.start.column;
-            j <= highlightedRange.end.column;
-            j++
-          ) {
-            editCellValue(i, j, "");
-          }
-        }
-      }
-      editCellValue(row, column, "");
+      clearHighlightedRange();
     }
   }
 
-  const cellHighlighted = isCellHighlighted(
-    cell.row,
-    cell.column,
-    {
-      row: highlightedRange.start.row,
-      column: highlightedRange.start.column,
-    },
-    {
-      row: highlightedRange.end.row,
-      column: highlightedRange.end.column,
-    },
-  );
+  const mouseIsDown = useRef(false);
+
+  useEffect(() => {
+    const handleMouseDown = () => {
+      mouseIsDown.current = true;
+    };
+
+    const handleMouseUp = () => {
+      mouseIsDown.current = false;
+    };
+
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    // Clean up the event listeners when the component unmounts
+    return () => {
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   return (
     <div
-      className={cn(
-        "h-8 w-24 border-[0.5px] border-gray-700  focus-within:border-2 focus-within:border-blue-600",
-        {
-          "bg-blue-100": cellHighlighted,
-        },
-        {
-          "border-b border-blue-700":
-            cell.row === highlightedRange.end.row && cellHighlighted,
-        },
-        {
-          "border-r border-blue-700":
-            cell.column === highlightedRange.end.column && cellHighlighted,
-        },
-        {
-          "border-t border-blue-700":
-            cell.row === highlightedRange.start.row && cellHighlighted,
-        },
-        {
-          "border-l border-blue-700":
-            cell.column === highlightedRange.start.column && cellHighlighted,
-        },
-      )}
+      className={cn("z-10 h-8 w-24 border-[0.5px] border-gray-700", {
+        "border-2 border-blue-700 bg-white": isFocused,
+      })}
       onMouseDown={() => {
-        setCurrentHighlighting(true);
-        setHighlightedRange(
-          { row: cell.row, column: cell.column },
-          { row: cell.row, column: cell.column },
-        );
+        setCurrentlyHighlighting(true);
+        setHighlightedStart({ row: cell.row, column: cell.column });
+        setHighlightedEnd({ row: cell.row, column: cell.column });
       }}
       onMouseUp={() => {
-        setCurrentHighlighting(false);
-        setHighlightedRange(
-          {
-            row: highlightedRange.start.row,
-            column: highlightedRange.start.column,
-          },
-          { row: cell.row, column: cell.column },
-        );
+        setCurrentlyHighlighting(false);
+        setHighlightedEnd({ row: cell.row, column: cell.column });
       }}
+      // onMouseEnter={() => {
+      //   if (currentlyHighlighting) {
+      //     setHighlightedEnd({ row: cell.row, column: cell.column });
+      //   }
+      // }}
       onMouseEnter={() => {
-        if (currentlyHighlighting) {
-          setHighlightedRange(
-            {
-              row: highlightedRange.start.row,
-              column: highlightedRange.start.column,
-            },
-            { row: cell.row, column: cell.column },
-          );
+        if (mouseIsDown.current) {
+          setHighlightedEnd({ row: cell.row, column: cell.column });
         }
       }}
     >
@@ -160,6 +120,6 @@ const Cell = ({ cell }: cellProps) => {
       />
     </div>
   );
-};
+});
 
 export default Cell;
