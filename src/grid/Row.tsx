@@ -1,14 +1,15 @@
-import Column from './Column';
+import type { Row } from "../../types";
+import Cell from "./Cell";
 
 type RowProps = {
-  rows: number;
+  row: Row;
 };
 
-const Row = ({ rows }: RowProps) => {
+const Row = ({ row }: RowProps) => {
   return (
-    <div>
-      {Array.from({ length: rows }).map((row, i) => (
-        <Column key={i} columns={10} row={i} />
+    <div className="flex border-x-[0.5px] border-gray-600 last:border-b-[0.5px]">
+      {row.cells.map((cell, i) => (
+        <Cell key={i} cell={cell} />
       ))}
     </div>
   );
