@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Row, Cell } from "../types";
+import type { Row, Cell, Style } from "../../types";
 import { produce } from "immer";
 
 const INITIAL_ROWS = 20;
@@ -29,6 +29,8 @@ type GridStore = {
     column: number | undefined;
   }) => void;
   clearHighlightedRange: () => void;
+  applyStyleToRange: (styles: Partial<Style>) => void;
+  clearStyling: () => void;
 };
 
 export const useGridStore = create<GridStore>((set) => ({
@@ -103,6 +105,57 @@ export const useGridStore = create<GridStore>((set) => ({
             ) {
               state.grid[i].cells[j].value = "";
             }
+          }
+        }
+      }),
+    );
+  },
+  applyStyleToRange: (styles) => {
+    set(
+      produce((state: GridStore) => {
+        if (
+          state.highlightedStart.row !== undefined &&
+          state.highlightedStart.column !== undefined &&
+          state.highlightedEnd.row !== undefined &&
+          state.highlightedEnd.column !== undefined
+        ) {
+          for (
+            let i = state.highlightedStart.row;
+            i <= state.highlightedEnd.row;
+            i++
+          ) {
+            for (
+              let j = state.highlightedStart.column;
+              j <= state.highlightedEnd.column;
+              j++
+            ) {
+              for (const key in styles) {
+                state.grid[i].cells[j].style = {
+                  ...state.grid[i].cells[j].style,
+                  [key]: styles[key as keyof Style],
+                };
+              }
+            }
+          }
+        }
+      }),
+    );
+  },
+  clearStyling: () => {
+    set(
+      produce((state) => {
+        for (let i = 0; i < state.grid.length; i++) {
+          for (let j = 0; j < state.grid[i].cells.length; j++) {
+            state.grid[i].cells[j].style = {
+              textColor: "black",
+              backgroundColor: "transparent",
+              fontFamily: "Arial",
+              fontSize: 12,
+              bold: false,
+              italic: false,
+              underline: false,
+              decimals: 0,
+            };
           }
         }
       }),

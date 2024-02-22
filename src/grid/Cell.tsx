@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from "react";
 import type { Cell } from "../../types";
-import { useGridStore } from "../store";
+import { useGridStore } from "../store/grid";
 import { cn } from "@/lib/utils";
 
 type cellProps = {
@@ -10,6 +10,8 @@ type cellProps = {
 
 const Cell = memo(({ cell, isFocused }: cellProps) => {
   console.log(`Cell: ${cell.row}, ${cell.column} is being rendered`);
+
+  console.log("underline", `${cell.style.underline}`);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,6 +27,7 @@ const Cell = memo(({ cell, isFocused }: cellProps) => {
   const clearHighlightedRange = useGridStore(
     (state) => state.clearHighlightedRange,
   );
+  const clearStyling = useGridStore((state) => state.clearStyling);
 
   useEffect(() => {
     if (isFocused) {
@@ -60,6 +63,7 @@ const Cell = memo(({ cell, isFocused }: cellProps) => {
     // handle delete key
     if (e.key === "Delete") {
       clearHighlightedRange();
+      clearStyling();
     }
   }
 
@@ -86,9 +90,10 @@ const Cell = memo(({ cell, isFocused }: cellProps) => {
 
   return (
     <div
-      className={cn("z-10 h-8 w-24 border-[0.5px] border-gray-700", {
-        "border-2 border-blue-700 bg-white": isFocused,
+      className={cn("h-8 w-24 border-[0.5px] border-gray-700", {
+        "border-2 border-blue-700": isFocused,
       })}
+      style={{ backgroundColor: cell.style.backgroundColor }}
       onMouseDown={() => {
         setCurrentlyHighlighting(true);
         setHighlightedStart({ row: cell.row, column: cell.column });
@@ -98,11 +103,6 @@ const Cell = memo(({ cell, isFocused }: cellProps) => {
         setCurrentlyHighlighting(false);
         setHighlightedEnd({ row: cell.row, column: cell.column });
       }}
-      // onMouseEnter={() => {
-      //   if (currentlyHighlighting) {
-      //     setHighlightedEnd({ row: cell.row, column: cell.column });
-      //   }
-      // }}
       onMouseEnter={() => {
         if (mouseIsDown.current) {
           setHighlightedEnd({ row: cell.row, column: cell.column });
@@ -115,8 +115,22 @@ const Cell = memo(({ cell, isFocused }: cellProps) => {
         onChange={(e) => editCellValue(cell.row, cell.column, e.target.value)}
         onKeyDown={(e) => handleKeyDown(e, cell.row, cell.column)}
         type="text"
-        className="h-full w-full bg-transparent p-1 focus:outline-none"
+        className={cn(
+          "relative z-30 h-full w-full bg-transparent p-1 focus:outline-none",
+          {
+            "font-bold": cell.style.bold,
+          },
+          { "text-underline": cell.style.underline },
+        )}
         onMouseDown={() => setFocusedCell(cell.row, cell.column)}
+        style={{
+          color: cell.style.textColor,
+          fontSize: `${cell.style.fontSize}px`,
+          backgroundColor: isFocused
+            ? cell.style.backgroundColor
+            : "transparent",
+          textDecoration: cell.style.underline ? "underline" : "none",
+        }}
       />
     </div>
   );
