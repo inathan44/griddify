@@ -1,4 +1,4 @@
-import { useGridStore } from "@/store";
+import { useGridStore } from "@/store/grid";
 import type { Row } from "../../types";
 import Cell from "./Cell";
 

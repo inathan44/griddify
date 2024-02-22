@@ -1,4 +1,4 @@
-import { useGridStore } from "@/store";
+import { useGridStore } from "@/store/grid";
 import Header from "./Header";
 
 const RowHeader = () => {

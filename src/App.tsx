@@ -5,7 +5,7 @@ import Row from "./grid/Row";
 import RowHeader from "./grid/RowHeaders";
 import Ribbon from "@/ribbon/Ribbon";
 import HighlightOverlay from "@/grid/HighlightOverlay";
-import { useGridStore } from "./store";
+import { useGridStore } from "./store/grid";
 
 function App() {
   const grid = useGridStore((state) => state.grid);
