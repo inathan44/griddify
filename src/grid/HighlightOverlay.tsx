@@ -1,4 +1,4 @@
-import { useGridStore } from "@/store";
+import { useGridStore } from "@/store/grid";
 
 type HighlightOverlayProps = {
   cellWidth: number;
@@ -18,6 +18,13 @@ const HighlightOverlay = ({ cellWidth, cellHeight }: HighlightOverlayProps) => {
     return null;
   }
 
+  if (
+    highlightedStart.row === highlightedEnd.row &&
+    highlightedStart.column === highlightedEnd.column
+  ) {
+    return null;
+  }
+
   const top = Math.min(highlightedStart.row, highlightedEnd.row) * cellHeight;
   const left =
     Math.min(highlightedStart.column, highlightedEnd.column) * cellWidth;
@@ -28,7 +35,7 @@ const HighlightOverlay = ({ cellWidth, cellHeight }: HighlightOverlayProps) => {
 
   return (
     <div
-      className="absolute bg-blue-300 bg-opacity-50"
+      className="absolute z-10 border-2 border-blue-500 bg-blue-300 bg-opacity-50 transition-all duration-75"
       style={{
         top: `${top}px`,
         left: `${left + 32}px`,
