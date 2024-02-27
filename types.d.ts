@@ -12,11 +12,17 @@ export type Style = {
 export type Cell = {
   row: number;
   column: number;
-  value: string | number | undefined;
+  formula: string | number | undefined;
+  computedValue: string | number | undefined;
   style: Style;
 };
 
 export type Row = {
   cells: Cell[];
   row: number;
+};
+
+export type ParsedFormula = {
+  operation: string;
+  args: (ParsedFormula | number | string)[][];
 };
