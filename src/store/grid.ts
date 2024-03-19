@@ -1,8 +1,12 @@
 import { create } from "zustand";
 import type { Row, Cell, Style } from "../../types";
-import { produce } from "immer";
+import { produce, Draft } from "immer";
+import type { ParsedFormula } from "../../types";
+import { evaluate } from "../formulas/formulaParsing";
+import * as nearley from "nearley";
+import grammar from "../formulas/formula";
 
-const INITIAL_ROWS = 20;
+const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 26;
 
 type GridStore = {
@@ -13,6 +17,11 @@ type GridStore = {
     row: number,
     column: number,
     value: string | number | undefined,
+  ) => void;
+  calculateFormula: (
+    row: number,
+    column: number,
+    formula: string | number | undefined,
   ) => void;
   focusedCell: { row: number | undefined; column: number | undefined };
   setFocusedCell: (row: number | undefined, column: number | undefined) => void;
@@ -45,8 +54,26 @@ export const useGridStore = create<GridStore>((set) => ({
   ),
   editCellValue: (row, column, value) => {
     set(
-      produce((state) => {
-        state.grid[row].cells[column].value = value;
+      produce((state: Draft<GridStore>) => {
+        state.grid[row].cells[column].formula = value;
+        state.grid[row].cells[column].computedValue = value;
+      }),
+    );
+  },
+  calculateFormula: (row, column, formula) => {
+    let parsedFormula: ParsedFormula;
+    if (typeof formula === "string" && formula.startsWith("=")) {
+      const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+      parsedFormula = parser.feed(formula).results[0] as ParsedFormula;
+    } else {
+      return;
+    }
+    set(
+      produce((state: Draft<GridStore>) => {
+        state.grid[row].cells[column].computedValue = evaluate(
+          parsedFormula,
+          state.grid,
+        );
       }),
     );
   },
@@ -167,7 +194,8 @@ function createCell(row: number, column: number): Cell {
   return {
     row,
     column,
-    value: "",
+    formula: "",
+    computedValue: "",
     style: {
       textColor: "black",
       backgroundColor: "white",

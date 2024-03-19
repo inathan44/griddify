@@ -9,13 +9,12 @@ type cellProps = {
 };
 
 const Cell = memo(({ cell, isFocused }: cellProps) => {
-  console.log(`Cell: ${cell.row}, ${cell.column} is being rendered`);
-
-  console.log("underline", `${cell.style.underline}`);
+  // console.log(`Cell: ${cell.row}, ${cell.column} is being rendered`);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const editCellValue = useGridStore((state) => state.editCellValue);
+  const calculateFormula = useGridStore((state) => state.calculateFormula);
   const setFocusedCell = useGridStore((state) => state.setFocusedCell);
   const setHighlightedStart = useGridStore(
     (state) => state.setHighlightedStart,
@@ -111,8 +110,9 @@ const Cell = memo(({ cell, isFocused }: cellProps) => {
     >
       <input
         ref={inputRef}
-        value={cell.value}
+        value={cell.computedValue}
         onChange={(e) => editCellValue(cell.row, cell.column, e.target.value)}
+        onBlur={(e) => calculateFormula(cell.row, cell.column, e.target.value)}
         onKeyDown={(e) => handleKeyDown(e, cell.row, cell.column)}
         type="text"
         className={cn(

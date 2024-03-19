@@ -1,15 +1,11 @@
 import "./App.css";
 import ColHeaders from "./grid/ColHeaders";
-
-import Row from "./grid/Row";
 import RowHeader from "./grid/RowHeaders";
 import Ribbon from "@/ribbon/Ribbon";
 import HighlightOverlay from "@/grid/HighlightOverlay";
-import { useGridStore } from "./store/grid";
+import Grid from "./grid/Grid";
 
 function App() {
-  const grid = useGridStore((state) => state.grid);
-
   return (
     <div>
       <Ribbon />
@@ -20,11 +16,7 @@ function App() {
         </div>
         <div className="relative flex border-collapse">
           <RowHeader />
-          <div className="">
-            {grid.map((row, i) => (
-              <Row key={i} row={row} />
-            ))}
-          </div>
+          <Grid />
           <HighlightOverlay cellHeight={32} cellWidth={96} />
         </div>
       </div>

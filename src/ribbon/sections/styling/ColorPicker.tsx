@@ -4,7 +4,6 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import StyleButton from "./StyleButton";
 import { cn } from "@/lib/utils";
 import { useStyleStore } from "@/store/style";
 import { useGridStore } from "@/store/grid";
@@ -52,13 +51,20 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           hideIcon
           className="w-auto justify-center border-0 bg-transparent p-0"
         >
-          <StyleButton className="flex flex-col justify-between">
+          <div
+            className={cn(
+              "h-8 w-8 rounded p-0 brightness-75 active:brightness-90",
+              "hover:bg-accent hover:text-accent-foreground",
+              "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+              "flex flex-col justify-between",
+            )}
+          >
             {children}
             <div
               className={cn("h-1 w-5")}
               style={{ backgroundColor: styleColor }}
             ></div>
-          </StyleButton>
+          </div>
         </SelectTrigger>
         <SelectContent className="" direction="horizontal" align="center">
           {colors.map((color) => (
