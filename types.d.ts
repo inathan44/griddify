@@ -26,3 +26,8 @@ export type ParsedFormula = {
   operation: string;
   args: (ParsedFormula | number | string)[][];
 };
+
+export type Coords = {
+  row: number;
+  column: number;
+};
